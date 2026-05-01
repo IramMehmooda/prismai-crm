@@ -2,7 +2,7 @@
 
 > Use this document to resume work on **prismAI** (HubSpot-like CRM for Industrial Manufacturers — generic, no longer SMI-specific) if this chat session is lost.
 
-Last updated: 2026-05-01 (quote edit/delete overhaul, campaign form fix, approval threshold change)
+Last updated: 2026-05-01 (statistics dashboard, analytics command center, enriched seed data)
 
 ## Current continuation note
 
@@ -840,6 +840,79 @@ Migration: `prisma/migrations/20260428224141_teams_and_user_team/`. Seed creates
 - **Teams & User Management**: Admins can add/disable users, reset passwords, and manage teams. Visibility scope rules are enforced for all major list pages.
 - **UI/UX Polish**: Print dialog, global search palette (Cmd+K), `/profile` page, topbar/sidebar overhaul, and improved owner filtering on all major entities.
 
+---
+
+## 8. Statistics Dashboard — Analytics Command Center (2026-05-01)
+
+### What was built
+A fully redesigned `/dashboard/statistics` page serving as a visual analytical command center. All data is fetched live from Prisma — no hardcoded values. Every chart element is clickable and navigates to the corresponding CRM module.
+
+### Page layout (3 rows)
+
+**Row 1 — Operational Diagnostics**
+| Widget | Chart | Links to |
+|---|---|---|
+| Active Leads by Source | Colour-coded vertical bar chart (6 source types) | `/leads` |
+| Lead Status Distribution | Multi-segment doughnut with centre total | `/leads` |
+| Won vs. Lost Deals | Grouped bar chart over 12 rolling months | `/pipeline` |
+
+**Row 2 — Pipeline & Strategy**
+| Widget | Chart | Links to |
+|---|---|---|
+| Deals by Stage | Horizontal bar funnel (shows count + SAR per stage, % of pipeline) | `/pipeline` |
+| Revenue by Industry | Recursive halving treemap (size = deal value, industry label + SAR) | `/companies` |
+
+**Row 3 — Action & Priority**
+| Widget | Chart | Links to |
+|---|---|---|
+| Tasks by Priority | Pie chart with donut hole showing total count | `/tasks` |
+| Deal Locations | Simplified SVG map of Saudi Arabia with proportional green bubbles per region | `/companies` |
+| Recent Activity Feed | Live milestone list (emoji icon, subject, user, relative timestamp) | `/activities` or `/leads` |
+
+### Files created/modified
+```
+src/app/(app)/dashboard/statistics/page.tsx    REWRITTEN — 8 chart widgets, all Prisma-backed
+prisma/seed-enrich.ts                          NEW — enrichment seed for rich visuals
+```
+
+### Enrichment seed (`prisma/seed-enrich.ts`)
+Run once after initial seed to populate meaningful chart data:
+```bash
+npx tsx prisma/seed-enrich.ts
+```
+Adds:
+- 12 companies across 10 Saudi regions (Jubail, Riyadh, Jeddah, Dammam, Yanbu, Makkah, Tabuk, Abha, Madinah, Eastern)
+- 13 additional leads across all 6 source types (WEB, REFERRAL, TRADE_SHOW, LINKEDIN, COLD, OTHER)
+- 8 active pipeline opportunities (various stages)
+- 24 historical won/lost opportunities spread across 12 months (≈SAR 13M won, SAR 1.7M lost)
+- 9 additional tasks (HIGH/MEDIUM/LOW priority split: 7/4/3)
+- 12 milestone activities for the activity feed
+
+DB state after full seed + enrich:
+- 15 companies, 17 leads, 35 opportunities (active + historical), 14 tasks, 18 activities
+
+### Chart implementation notes
+- All charts are pure inline SVG (no external library, consistent with existing `Charts.tsx` pattern).
+- Chart components are co-located inside `page.tsx` (server component — no "use client" needed since SVG is rendered server-side).
+- `squarify()` recursive halving layout used for treemap (simpler and more predictable than full squarified algorithm).
+- `niceCeil()` helper provides clean Y-axis tick values for bar/line charts.
+- `relativeTime()` provides human-readable relative timestamps for the activity feed.
+- The Saudi Arabia SVG map uses a simplified 21-point polygon path. `CITY_COORDS` maps region strings from `Company.region` to x/y positions. Add new regions to the `CITY_COORDS` map as the dataset grows.
+
+### Sidebar link
+Already present in `src/app/(app)/layout.tsx` from previous session — no changes needed:
+```tsx
+{ href: "/dashboard/statistics", label: "Statistics", icon: "trend-up" }
+```
+
+### Hard rules for this page
+- Always use `prisma.opportunity.findMany` with `select` **or** `include` — never both simultaneously (Prisma error).
+- The `closedAt` field on `Opportunity` is `DateTime?` — check `if (!o.closedAt) continue` before using it.
+- `Company.region` is a free-text string from user input — always normalise with `.trim()` before looking up in `CITY_COORDS`.
+- The `wonLostOpps` query uses `select` (not `include`) — this avoids the select+include conflict.
+
+---
+
 ### Bug-fix batch — May 2026
 
 **Seed & schema alignment fixes** (broken by a previous GPT-4.1 agent):
@@ -879,7 +952,7 @@ Paste the block below into a new Copilot chat to resume work on this project wit
 ```
 I'm continuing work on **prismAI**, a HubSpot-like CRM for industrial manufacturers (generic, formerly SMI), located at `/Users/irammehmooda/CRM/Project/prismai`.
 
-**First**, read `docs/HANDOFF.md` end-to-end and `/Users/irammehmooda/CRM/plan.md`. They document Phases 1-4 (auth, dashboard, contacts/companies/leads/activities, pipeline+kanban, tasks, products+quotes+VAT+approvals, scoring+campaigns, Gmail OAuth) plus the most recent batch (rebrand from SMI to generic Industrial, global search palette, notifications system, `/profile` page, topbar/sidebar overhaul, and all April 2026 changes).
+**First**, read `docs/HANDOFF.md` end-to-end and `/Users/irammehmooda/CRM/plan.md`. They document Phases 1-4 (auth, dashboard, contacts/companies/leads/activities, pipeline+kanban, tasks, products+quotes+VAT+approvals, scoring+campaigns, Gmail OAuth) plus the most recent batches (rebrand from SMI to generic Industrial, global search palette, notifications system, `/profile` page, topbar/sidebar overhaul, all April/May 2026 changes, and the Statistics analytics dashboard).
 
 **Stack**: Next.js 13.5.6 App Router (TS), Tailwind 3, Prisma 5 + SQLite (`prisma/dev.db`), `jose` JWT in HttpOnly cookie, `bcryptjs`, `zod`. Server components by default, "use client" only for interactive forms. `getSession()` in every protected route. Audit-log every create/update/delete.
 
@@ -898,6 +971,7 @@ Login `admin@prismai.app` / `Prism@123` (other users: manager / sales / finance 
 - Import Prisma as `import { prisma } from "@/lib/db"` (named, **not** default). Auth as `import { getSession } from "@/lib/auth"` (custom jose JWT, **not** next-auth).
 - Quote approval thresholds: Manager > SAR 50,000 or discount > 10%, Finance > SAR 1,000,000.
 - `UserMenu` dropdown must stay minimal: identity card + "Your profile" only. **No** Settings/Activities/Sign out/Language toggle (all duplicates of sidebar/topbar — locale lives in topbar).
+- Statistics dashboard (`/dashboard/statistics`): all Prisma queries use `select` OR `include`, never both. `Company.region` is free text — trim before `CITY_COORDS` lookup. `Opportunity.closedAt` is nullable — always guard before use.
 - Sidebar must end at `<SidebarNav />` — **no** bottom user panel.
 - Topbar logout is a dedicated icon button next to `<UserMenu>` — keep it.
 - JWT cookie caches session name at sign-in time. After any user rename, the user must sign out + back in (or call `PATCH /api/profile` which re-issues the JWT).
