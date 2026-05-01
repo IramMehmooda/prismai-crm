@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #ecf0f3;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: #2c3845;
+  -webkit-font-smoothing: antialiased;
+}
+
+[dir="rtl"] .ltr-only { display: none; }
+[dir="ltr"] .rtl-only { display: none; }
+
+@layer components {
+  /* --------- Cards ---------- */
+  .card {
+    @apply bg-white rounded-md border border-ink-200 shadow-card;
+  }
+  .card-header {
+    @apply px-5 py-3 border-b border-ink-200 flex items-center justify-between text-sm font-semibold text-ink-700;
+  }
+  .card-body {
+    @apply p-5;
+  }
+
+  /* --------- Buttons ---------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition active:scale-[0.99];
+  }
+  .btn-primary {
+    @apply btn bg-leaf-500 text-white hover:bg-leaf-600 shadow-glow;
+  }
+  .btn-outline {
+    @apply btn border border-ink-200 bg-white hover:bg-ink-50 text-ink-700;
+  }
+  .btn-ghost {
+    @apply btn text-ink-600 hover:bg-ink-100;
+  }
+  .btn-dark {
+    @apply btn bg-nav-700 text-white hover:bg-nav-600;
+  }
+
+  /* --------- Forms ---------- */
+  .input {
+    @apply w-full rounded-md border border-ink-200 px-3 py-2 text-sm bg-white placeholder:text-ink-400
+           focus:outline-none focus:ring-2 focus:ring-leaf-500/30 focus:border-leaf-500 transition;
+  }
+  .label {
+    @apply block text-[12px] font-semibold text-ink-600 mb-1.5;
+  }
+
+  /* --------- Pills/Badges --------- */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium;
+  }
+
+  /* --------- Sidebar nav --------- */
+  .nav-link {
+    @apply flex items-center gap-3 px-5 py-3 text-[13.5px] font-medium text-nav-ink
+           border-l-4 border-transparent hover:text-white hover:bg-nav-700 transition;
+  }
+  .nav-link-active {
+    @apply text-white bg-leaf-500 border-leaf-700 hover:bg-leaf-500;
+  }
+  .nav-section {
+    @apply px-5 pt-4 pb-1 text-[10px] uppercase tracking-wider text-nav-ink/60 font-semibold;
+  }
+
+  /* --------- KPI tile (icon left, number right) --------- */
+  .kpi {
+    @apply card flex items-center gap-4 p-4;
+  }
+  .kpi-icon {
+    @apply w-12 h-12 rounded-full grid place-items-center text-white shrink-0;
+  }
+  .kpi-number {
+    @apply text-2xl font-bold text-ink-900 tabular-nums leading-none;
+  }
+  .kpi-label {
+    @apply text-[11px] uppercase tracking-wider text-ink-400 mt-1 font-semibold;
+  }
+
+  /* --------- Table --------- */
+  .table-modern { @apply w-full text-sm; }
+  .table-modern thead th {
+    @apply text-[11px] font-semibold text-ink-500 uppercase tracking-wider px-5 py-3 text-start bg-ink-50 border-b border-ink-200;
+  }
+  .table-modern tbody td {
+    @apply px-5 py-3 text-ink-700 border-t border-ink-100;
+  }
+  .table-modern tbody tr {
+    @apply hover:bg-leaf-50 transition;
+  }
+
+  /* --------- Avatar --------- */
+  .avatar {
+    @apply inline-flex items-center justify-center rounded-full text-[11px] font-bold text-white;
+  }
+
+  /* --------- Breadcrumb --------- */
+  .crumb {
+    @apply text-[13px] text-ink-500 hover:text-leaf-600 transition inline-flex items-center gap-1.5;
+  }
+
+  /* --------- Skeleton --------- */
+  .skeleton {
+    @apply bg-ink-200 rounded;
+    background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+  }
+}
+
+/* Scrollbar polish */
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.18); border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.28); }

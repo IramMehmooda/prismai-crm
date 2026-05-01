@@ -1,0 +1,379 @@
+// prismAI - Phases 1-4 schema
+// Single-tenant SMI deployment with tenant-aware fields for future multi-tenant readiness.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String
+  locale       String   @default("en")
+  image        String?
+  isActive     Boolean  @default(true)
+  teams        Team[]   // implicit many-to-many
+  googleId     String?  @unique
+  googleAccessToken     String?
+  googleRefreshToken    String?
+  googleTokenExpiresAt  DateTime?
+  gmailHistoryId        String?
+  gmailLastSyncAt       DateTime?
+  gmailWatchExpiration  DateTime?
+  gmailPushEnabled      Boolean  @default(false)
+  gmailNotifyCustomerEmails Boolean @default(true)
+  gmailNotifyTeamEmails Boolean @default(true)
+  gmailNotifyOnlyMyPipeline Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ownedCompanies     Company[]      @relation("CompanyOwner")
+  ownedContacts      Contact[]      @relation("ContactOwner")
+  ownedLeads         Lead[]         @relation("LeadOwner")
+  ownedOpportunities Opportunity[]  @relation("OppOwner")
+  assignedTasks      Task[]         @relation("TaskAssignee")
+  createdTasks       Task[]         @relation("TaskCreator")
+  ownedQuotes        Quote[]        @relation("QuoteOwner")
+  approvalsRequested QuoteApproval[] @relation("ApprReq")
+  approvalsDecided   QuoteApproval[] @relation("ApprDecider")
+  campaigns          Campaign[]
+  activities         Activity[]
+  opportunityComments OpportunityComment[]
+}
+
+model Company {
+  id         String   @id @default(cuid())
+  name       String
+  nameAr     String?
+  industry   String?
+  region     String?
+  website    String?
+  vatNumber  String?
+  size       String?
+  ownerId    String?
+  owner      User?    @relation("CompanyOwner", fields: [ownerId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  contacts       Contact[]
+  leads          Lead[]
+  opportunities  Opportunity[]
+  quotes         Quote[]
+}
+
+model Contact {
+  id         String   @id @default(cuid())
+  firstName  String
+  lastName   String
+  nameAr     String?
+  email      String?
+  phone      String?
+  whatsapp   String?
+  title      String?
+  companyId  String?
+  company    Company? @relation(fields: [companyId], references: [id])
+  ownerId    String?
+  owner      User?    @relation("ContactOwner", fields: [ownerId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  leads          Lead[]
+  opportunities  Opportunity[]
+  quotes         Quote[]
+  activities     Activity[]
+  campaignMembers CampaignMember[]
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  title       String
+  source      String
+  status      String   @default("NEW")
+  score       Int      @default(0)
+  scoreAuto   Int      @default(0)
+  estimatedValue Float?
+  notes       String?
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id])
+  contactId   String?
+  contact     Contact? @relation(fields: [contactId], references: [id])
+  ownerId     String?
+  owner       User?    @relation("LeadOwner", fields: [ownerId], references: [id])
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  convertedAt DateTime?
+  opportunityId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  activities  Activity[]
+  tasks       Task[]
+}
+
+// ---------------- Phase 2: Pipeline ----------------
+
+model PipelineStage {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  order       Int
+  probability Int
+  isWon       Boolean  @default(false)
+  isLost      Boolean  @default(false)
+  color       String?
+  createdAt   DateTime @default(now())
+
+  opportunities Opportunity[]
+}
+
+model Opportunity {
+  id          String   @id @default(cuid())
+  title       String
+  amount      Float
+  currency    String   @default("SAR")
+  stageId     String
+  stage       PipelineStage @relation(fields: [stageId], references: [id])
+  probability Int      @default(10)
+  expectedCloseAt DateTime?
+  closedAt    DateTime?
+  closeReason String?
+  ownerId     String?
+  owner       User?    @relation("OppOwner", fields: [ownerId], references: [id])
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id])
+  contactId   String?
+  contact     Contact? @relation(fields: [contactId], references: [id])
+  fromLeadId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tasks       Task[]
+  quotes      Quote[]
+  activities  Activity[]
+  comments    OpportunityComment[]
+}
+
+model OpportunityComment {
+  id            String      @id @default(cuid())
+  body          String
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  dueAt       String?
+  status      String   @default("OPEN")
+  priority    String   @default("MEDIUM")
+  assigneeId  String
+  assignee    User     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId   String
+  creator     User     @relation("TaskCreator", fields: [creatorId], references: [id])
+  leadId      String?
+  lead        Lead?    @relation(fields: [leadId], references: [id])
+  opportunityId String?
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id])
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------- Phase 3: Quotes & Products ----------------
+
+model Product {
+  id           String   @id @default(cuid())
+  sku          String   @unique
+  name         String
+  nameAr       String?
+  description  String?
+  unitPriceSar Float
+  taxRate      Float    @default(0.15)
+  category     String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  quoteItems   QuoteItem[]
+}
+
+model Quote {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  version       Int      @default(1)
+  status        String   @default("DRAFT")
+  validUntil    DateTime?
+  notes         String?
+  buyerVat      String?
+  buyerNameAr   String?
+  subtotalSar   Float    @default(0)
+  discountSar   Float    @default(0)
+  vatSar        Float    @default(0)
+  totalSar      Float    @default(0)
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  contactId     String?
+  contact       Contact? @relation(fields: [contactId], references: [id])
+  ownerId       String?
+  owner         User?    @relation("QuoteOwner", fields: [ownerId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items     QuoteItem[]
+  approvals QuoteApproval[]
+}
+
+model QuoteItem {
+  id         String  @id @default(cuid())
+  quoteId    String
+  quote      Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id])
+  description String
+  quantity   Float    @default(1)
+  unitPriceSar Float
+  discountPct Float   @default(0)
+  taxRate    Float    @default(0.15)
+  lineTotal  Float
+  order      Int      @default(0)
+}
+
+model QuoteApproval {
+  id          String   @id @default(cuid())
+  quoteId     String
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  level       String
+  status      String   @default("PENDING")
+  requestedById String
+  requestedBy User     @relation("ApprReq", fields: [requestedById], references: [id])
+  decidedById String?
+  decidedBy   User?    @relation("ApprDecider", fields: [decidedById], references: [id])
+  reason      String?
+  createdAt   DateTime @default(now())
+  decidedAt   DateTime?
+}
+
+// ---------------- Phase 4: Marketing & Scoring ----------------
+
+model Campaign {
+  id           String   @id @default(cuid())
+  name         String
+  channel      String
+  status       String   @default("DRAFT")
+  startDate    DateTime?
+  endDate      DateTime?
+  budgetSar    Float?
+  goal         String?
+  ownerId      String
+  owner        User     @relation(fields: [ownerId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members      CampaignMember[]
+  leads        Lead[]
+  messages     Message[]
+}
+
+model CampaignMember {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contactId  String
+  contact    Contact  @relation(fields: [contactId], references: [id])
+  status     String   @default("PENDING")
+  addedAt    DateTime @default(now())
+
+  @@unique([campaignId, contactId])
+}
+
+model ScoringRule {
+  id        String   @id @default(cuid())
+  name      String
+  field     String
+  operator  String
+  value     String
+  points    Int
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  channel    String
+  templateKey String?
+  toAddress  String
+  body       String
+  status     String   @default("QUEUED")
+  campaignId String?
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+  contactId  String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+  sentAt     DateTime?
+}
+
+// ---------------- Common ----------------
+
+model Activity {
+  id            String   @id @default(cuid())
+  type          String
+  subject       String
+  body          String?
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  contactId     String?
+  contact       Contact? @relation(fields: [contactId], references: [id])
+  leadId        String?
+  lead          Lead?    @relation(fields: [leadId], references: [id])
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String   // recipient
+  type       String   // QUOTE_APPROVAL_REQUESTED | QUOTE_APPROVED | QUOTE_REJECTED | QUOTE_SENT | QUOTE_ACCEPTED | LEAD_CONVERTED | LEAD_NEW | TASK_ASSIGNED | TASK_OVERDUE | GMAIL_SYNCED | MENTION
+  title      String
+  body       String?
+  href       String?  // deep-link
+  entity     String?
+  entityId   String?
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members   User[]   // implicit many-to-many
+}
