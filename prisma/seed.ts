@@ -154,7 +154,7 @@ async function main() {
     update: {},
     create: {
       id: "seed-t1", title: "Send pump datasheet to Mohammed", priority: "HIGH",
-      dueAt: new Date(Date.now() + 2*86400000),
+      dueAt: new Date(Date.now() + 2*86400000).toISOString().slice(0, 10),
       assigneeId: manager.id, creatorId: admin.id, opportunityId: opp1.id,
     },
   });
@@ -163,7 +163,7 @@ async function main() {
     update: {},
     create: {
       id: "seed-t2", title: "Schedule site visit - Riyadh Steel", priority: "MEDIUM",
-      dueAt: new Date(Date.now() + 5*86400000),
+      dueAt: new Date(Date.now() + 5*86400000).toISOString().slice(0, 10),
       assigneeId: rep.id, creatorId: manager.id,
     },
   });
@@ -172,7 +172,7 @@ async function main() {
     update: {},
     create: {
       id: "seed-t3", title: "Follow up overdue quote", priority: "HIGH",
-      dueAt: new Date(Date.now() - 1*86400000),
+      dueAt: new Date(Date.now() - 1*86400000).toISOString().slice(0, 10),
       assigneeId: rep.id, creatorId: manager.id,
     },
   });

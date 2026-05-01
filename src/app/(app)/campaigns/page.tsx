@@ -36,7 +36,7 @@ export default async function CampaignsPage() {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="pill bg-sky-100 text-sky-700">{c.channel}</span>
-              {c.budget != null && <span className="pill bg-ink-100 text-ink-600">{formatSAR(c.budget, locale)}</span>}
+              {c.budgetSar != null && <span className="pill bg-ink-100 text-ink-600">{formatSAR(c.budgetSar, locale)}</span>}
             </div>
             <div className="grid grid-cols-2 gap-2 text-[12px] pt-2 border-t border-ink-100">
               <div><span className="text-ink-400">{locale === "ar" ? "أعضاء" : "Members"}</span> <span className="font-semibold text-ink-700">{c._count.members}</span></div>

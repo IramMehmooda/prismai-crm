@@ -31,14 +31,27 @@ export default function QuoteActions({ id, status, role, locale }: { id: string;
 
   async function handleEdit() {
     setBusy(true);
-    const res = await fetch(`/api/quotes/${id}`);
-    if (!res.ok) {
+    const [quoteRes, productsRes, companiesRes, oppsRes] = await Promise.all([
+      fetch(`/api/quotes/${id}`),
+      fetch("/api/products"),
+      fetch("/api/companies"),
+      fetch("/api/opportunities"),
+    ]);
+    if (!quoteRes.ok) {
       setBusy(false);
       alert("Failed to load quote");
       return;
     }
-    const data = await res.json();
-    setQuoteData(data);
+    const quote = await quoteRes.json();
+    const products = productsRes.ok ? await productsRes.json() : [];
+    const companies = companiesRes.ok ? await companiesRes.json() : [];
+    const opps = oppsRes.ok ? await oppsRes.json() : [];
+    setQuoteData({
+      initialValues: quote,
+      products: (Array.isArray(products) ? products : []).filter((p: any) => p.active !== false).map((p: any) => ({ id: p.id, sku: p.sku, name: p.name, nameAr: p.nameAr, unitPriceSar: p.unitPriceSar, taxRate: p.taxRate })),
+      companies: (Array.isArray(companies) ? companies : []).map((c: any) => ({ id: c.id, name: c.name, vatNumber: c.vatNumber, nameAr: c.nameAr, contacts: (c.contacts ?? []).map((x: any) => ({ id: x.id, name: x.firstName ? `${x.firstName} ${x.lastName}` : x.name })) })),
+      opportunities: (Array.isArray(opps) ? opps : []).map((o: any) => ({ id: o.id, title: o.title, companyId: o.companyId, amount: o.amount })),
+    });
     setEditOpen(true);
     setBusy(false);
   }
@@ -108,7 +121,10 @@ export default function QuoteActions({ id, status, role, locale }: { id: string;
             <button className="absolute top-2 right-2 text-ink-400 hover:text-ink-700" onClick={() => setEditOpen(false)}><Icon name="x" size={18}/></button>
             <h2 className="text-xl font-bold mb-4">{locale === "ar" ? "تعديل العرض" : "Edit Quote"}</h2>
             <DynamicQuoteBuilder
-              {...quoteData}
+              products={quoteData.products}
+              companies={quoteData.companies}
+              opportunities={quoteData.opportunities}
+              initialValues={quoteData.initialValues}
               locale={locale}
               onSubmit={handleSaveEdit}
               onCancel={() => setEditOpen(false)}

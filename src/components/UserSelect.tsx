@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 export default function UserSelect({ value, onChange, disabled }: { value: string; onChange: (id: string) => void; disabled?: boolean }) {
   const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
   useEffect(() => {
-    fetch("/api/users")
+    fetch("/api/users/active")
       .then((r) => r.json())
-      .then((data) => setUsers(data.filter((u: any) => u.isActive)));
+      .then((data) => {
+        if (Array.isArray(data)) setUsers(data);
+      })
+      .catch(() => {});
   }, []);
   return (
     <select className="input" value={value} onChange={e => onChange(e.target.value)} disabled={disabled}>

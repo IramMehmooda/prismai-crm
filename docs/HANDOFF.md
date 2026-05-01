@@ -2,7 +2,7 @@
 
 > Use this document to resume work on **prismAI** (HubSpot-like CRM for Industrial Manufacturers — generic, no longer SMI-specific) if this chat session is lost.
 
-Last updated: 2026-04-29 (opportunity file upload fixes validated)
+Last updated: 2026-05-01 (quote edit/delete overhaul, campaign form fix, approval threshold change)
 
 ## Current continuation note
 
@@ -840,6 +840,36 @@ Migration: `prisma/migrations/20260428224141_teams_and_user_team/`. Seed creates
 - **Teams & User Management**: Admins can add/disable users, reset passwords, and manage teams. Visibility scope rules are enforced for all major list pages.
 - **UI/UX Polish**: Print dialog, global search palette (Cmd+K), `/profile` page, topbar/sidebar overhaul, and improved owner filtering on all major entities.
 
+### Bug-fix batch — May 2026
+
+**Seed & schema alignment fixes** (broken by a previous GPT-4.1 agent):
+- `prisma/seed.ts` — `Task.dueAt` fields changed from `Date` objects to `.toISOString().slice(0, 10)` strings (schema is `String?`, not `DateTime`).
+- `src/app/(app)/campaigns/page.tsx` — display field changed from `c.budget` → `c.budgetSar` to match schema.
+- `src/app/(app)/dashboard/page.tsx` — overdue tasks query removed non-existent `"IN_PROGRESS"` status; now filters by `status: "OPEN"` only.
+- `src/components/UserSelect.tsx` — fetches `/api/users/active` (new lightweight endpoint, accessible to all roles) instead of admin-only `/api/users`. Added `Array.isArray` guard and `.catch()`.
+- `src/app/api/users/active/route.ts` — **NEW** endpoint returning `{id, name}` of all active users, for use in dropdowns.
+
+**Quote edit/delete overhaul**:
+- `src/app/api/quotes/[id]/route.ts` — completely rewritten:
+  - Added Zod validation schema matching the POST route (`itemSchema` + `patchSchema`).
+  - PATCH now runs inside a `prisma.$transaction`: deletes old `QuoteItem` rows, creates new ones, recalculates `subtotalSar`/`discountSar`/`vatSar`/`totalSar` via `calcTotals()`.
+  - DELETE now writes an `AuditLog` entry.
+  - GET now orders items by `{ order: "asc" }`.
+- `src/app/(app)/quotes/[id]/QuoteActions.tsx` — `handleEdit()` now fetches `/api/products`, `/api/companies`, `/api/opportunities` in parallel alongside the quote, and passes `products`, `companies`, `opportunities` as separate props with `initialValues` to `QuoteBuilder`. Previously spread raw quote data as props, causing `TypeError: Cannot read properties of undefined (reading 'find')`.
+
+**Campaign creation fix**:
+- `src/app/(app)/campaigns/new/CampaignForm.tsx` — fixed 4 mismatches between form payload and API Zod schema:
+  - `budget` → `budgetSar`
+  - `description` → `goal`
+  - Channel option `ADS` → `OTHER`
+  - Status option `COMPLETED` → `DONE`
+
+**Companies API**:
+- `src/app/api/companies/route.ts` — added missing `GET` handler (returns all companies with contacts, ordered by name). Required by the quote edit modal.
+
+**Approval thresholds**:
+- `src/lib/quotes.ts` — Manager approval threshold changed from `totalSar > 500_000` to `totalSar > 50_000`. Finance threshold unchanged at `> 1_000_000`. Discount threshold unchanged at `> 10%`.
+
 ---
 
 ## 8. Continuation prompt for a new chat
@@ -863,6 +893,10 @@ Login `admin@prismai.app` / `Prism@123` (other users: manager / sales / finance 
 
 **Hard rules — do not break**:
 - `Opportunity` schema uses `amount` only; **no** `amountSar`, **no** `description`. Search route already burned by this once.
+- `Campaign` schema uses `budgetSar` (not `budget`) and `goal` (not `description`). Statuses: `DRAFT`, `ACTIVE`, `PAUSED`, `DONE`. Channels: `EMAIL`, `WHATSAPP`, `EVENT`, `LINKEDIN`, `OTHER`.
+- `Task.dueAt` is `String?` (date-only `YYYY-MM-DD`), **not** `DateTime`. Use `.toISOString().slice(0, 10)` in seed/API.
+- Import Prisma as `import { prisma } from "@/lib/db"` (named, **not** default). Auth as `import { getSession } from "@/lib/auth"` (custom jose JWT, **not** next-auth).
+- Quote approval thresholds: Manager > SAR 50,000 or discount > 10%, Finance > SAR 1,000,000.
 - `UserMenu` dropdown must stay minimal: identity card + "Your profile" only. **No** Settings/Activities/Sign out/Language toggle (all duplicates of sidebar/topbar — locale lives in topbar).
 - Sidebar must end at `<SidebarNav />` — **no** bottom user panel.
 - Topbar logout is a dedicated icon button next to `<UserMenu>` — keep it.

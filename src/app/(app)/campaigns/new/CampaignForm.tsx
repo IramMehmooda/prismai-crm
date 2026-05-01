@@ -20,10 +20,10 @@ export default function CampaignForm({ locale }: { locale: Locale }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: fd.get("name"),
-            description: fd.get("description") || null,
+            goal: fd.get("description") || null,
             channel: fd.get("channel"),
             status: fd.get("status"),
-            budget: fd.get("budget") ? Number(fd.get("budget")) : null,
+            budgetSar: fd.get("budget") ? Number(fd.get("budget")) : null,
             startDate: fd.get("startDate") || null,
             endDate: fd.get("endDate") || null,
           }),
@@ -43,7 +43,7 @@ export default function CampaignForm({ locale }: { locale: Locale }) {
             <option value="EMAIL">EMAIL</option>
             <option value="WHATSAPP">WHATSAPP</option>
             <option value="EVENT">EVENT</option>
-            <option value="ADS">ADS</option>
+            <option value="OTHER">OTHER</option>
             <option value="LINKEDIN">LINKEDIN</option>
           </select>
         </div>
@@ -53,7 +53,7 @@ export default function CampaignForm({ locale }: { locale: Locale }) {
             <option value="DRAFT">DRAFT</option>
             <option value="ACTIVE">ACTIVE</option>
             <option value="PAUSED">PAUSED</option>
-            <option value="COMPLETED">COMPLETED</option>
+            <option value="DONE">DONE</option>
           </select>
         </div>
       </div>

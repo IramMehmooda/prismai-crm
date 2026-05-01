@@ -34,7 +34,7 @@ export function calcTotals(items: QuoteItemInput[]) {
  */
 export function requiredApprovalLevel(totalSar: number, discountPct: number): "FINANCE" | "MANAGER" | null {
   if (totalSar > 1_000_000) return "FINANCE";
-  if (totalSar > 500_000 || discountPct > 10) return "MANAGER";
+  if (totalSar > 50_000 || discountPct > 10) return "MANAGER";
   return null;
 }
 

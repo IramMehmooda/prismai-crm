@@ -34,7 +34,7 @@ export default async function DashboardPage() {
       where: { createdAt: { gte: new Date(Date.now() - 12 * 30 * 24 * 3600 * 1000) } },
       select: { createdAt: true },
     }),
-    prisma.task.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] }, dueAt: { lt: today } } }),
+    prisma.task.count({ where: { status: "OPEN", dueAt: { lt: today } } }),
     prisma.opportunity.findMany({ where: { stage: { isWon: false, isLost: false } }, include: { stage: true } }),
     prisma.opportunity.aggregate({ _sum: { amount: true }, where: { stage: { isWon: false, isLost: false } } }),
   ]);

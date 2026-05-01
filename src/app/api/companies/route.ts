@@ -13,6 +13,14 @@ const schema = z.object({
   size: z.string().optional().nullable(),
 });
 
+export async function GET() {
+  const companies = await prisma.company.findMany({
+    orderBy: { name: "asc" },
+    include: { contacts: true },
+  });
+  return NextResponse.json(companies);
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
