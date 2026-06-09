@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
 const schema = z.object({ teamId: z.string(), userId: z.string() });
 
 async function requireAdmin() {

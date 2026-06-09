@@ -7,6 +7,7 @@ import { Icon } from "@/components/Icon";
 import OwnerToggle from "@/components/OwnerToggle";
 import LeadsTable from "./LeadsTable";
 
+export const dynamic = "force-dynamic";
 export default async function LeadsPage({ searchParams }: { searchParams?: { owner?: string } }) {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";

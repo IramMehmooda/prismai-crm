@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { type Locale } from "@/lib/i18n";
 import LeadForm from "../../new/LeadForm";
 
+export const dynamic = "force-dynamic";
 export default async function EditLeadPage({ params }: { params: { id: string } }) {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";

@@ -6,6 +6,7 @@ import { formatSAR, t, type Locale } from "@/lib/i18n";
 import { Icon } from "@/components/Icon";
 import DeleteEntityButton from "@/components/DeleteEntityButton";
 
+export const dynamic = "force-dynamic";
 function statusTone(status: string) {
   switch (status) {
     case "NEW":

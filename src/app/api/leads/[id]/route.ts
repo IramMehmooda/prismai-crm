@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
 const patchSchema = z.object({
   title: z.string().min(2).optional(),
   source: z.enum(["WEB", "REFERRAL", "TRADE_SHOW", "LINKEDIN", "COLD", "OTHER"]).optional(),

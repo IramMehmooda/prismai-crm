@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
 const schema = z.object({
   name: z.string().min(2),
   channel: z.enum(["EMAIL", "WHATSAPP", "EVENT", "LINKEDIN", "OTHER"]),

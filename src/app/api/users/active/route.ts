@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
 /** Returns id + name of all active users. Available to any authenticated user. */
 export async function GET() {
   const session = await getSession();

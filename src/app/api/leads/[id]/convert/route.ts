@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 
+export const dynamic = "force-dynamic";
 const schema = z.object({
   stageId: z.string().optional(),
   amount: z.number().optional(),

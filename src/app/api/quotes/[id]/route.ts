@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { calcTotals } from "@/lib/quotes";
 
+export const dynamic = "force-dynamic";
 const itemSchema = z.object({
   productId: z.string().nullable().optional(),
   description: z.string().min(1),

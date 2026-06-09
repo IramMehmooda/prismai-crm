@@ -5,6 +5,7 @@ import { t, type Locale } from "@/lib/i18n";
 import { Icon } from "@/components/Icon";
 import ContactsTable from "./ContactsTable";
 
+export const dynamic = "force-dynamic";
 export default async function ContactsPage() {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";

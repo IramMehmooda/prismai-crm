@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
 const createSchema = z.object({
   title: z.string().min(2),
   amount: z.number().positive(),

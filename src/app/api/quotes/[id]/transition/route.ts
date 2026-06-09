@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { requiredApprovalLevel } from "@/lib/quotes";
 import { notify, notifyMany, userIdsByRoles } from "@/lib/notify";
 
+export const dynamic = "force-dynamic";
 const schema = z.object({
   action: z.enum(["SUBMIT", "APPROVE", "REJECT", "SEND", "ACCEPT", "DECLINE"]),
   reason: z.string().optional(),

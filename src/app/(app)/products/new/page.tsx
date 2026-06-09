@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth";
 import { type Locale } from "@/lib/i18n";
 import ProductForm from "./ProductForm";
 
+export const dynamic = "force-dynamic";
 export default async function NewProductPage() {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";

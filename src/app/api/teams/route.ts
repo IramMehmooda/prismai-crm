@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
 const createSchema = z.object({ name: z.string().min(2).max(60) });
 const patchSchema = z.object({ id: z.string(), name: z.string().min(2).max(60) });
 const deleteSchema = z.object({ id: z.string() });

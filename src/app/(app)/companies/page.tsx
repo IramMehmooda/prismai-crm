@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { t, type Locale } from "@/lib/i18n";
 import { Icon } from "@/components/Icon";
 
+export const dynamic = "force-dynamic";
 const grads = ["bg-grad-aurora", "bg-grad-brand", "bg-grad-sunset", "bg-grad-mint"];
 
 export default async function CompaniesPage() {

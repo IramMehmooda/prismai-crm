@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { recomputeAllLeadScores } from "@/lib/scoring";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
 export async function POST() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

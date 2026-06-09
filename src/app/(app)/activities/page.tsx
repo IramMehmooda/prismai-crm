@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/Icon";
 import OwnerToggle from "@/components/OwnerToggle";
 import ActivityForm from "./ActivityForm";
 
+export const dynamic = "force-dynamic";
 type TimelineActivity = {
   kind: "activity";
   id: string;

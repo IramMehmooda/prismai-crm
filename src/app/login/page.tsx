@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/Icon";
 
+export const dynamic = "force-dynamic";
 export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();

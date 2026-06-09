@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
 const ROLES = ["ADMIN", "SALES_MANAGER", "SALES_REP", "FINANCE", "MARKETING"] as const;
 
 const createSchema = z.object({

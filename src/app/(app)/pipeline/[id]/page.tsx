@@ -14,6 +14,7 @@ import OpportunityNoteForm from "../OpportunityNoteForm";
 import OpportunityStageActions from "../OpportunityStageActions";
 import OpportunityFilesPanel from "../OpportunityFilesPanel";
 
+export const dynamic = "force-dynamic";
 function activityIcon(type: string) {
   switch (type) {
     case "EMAIL":

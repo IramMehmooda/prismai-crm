@@ -5,6 +5,7 @@ import { formatSAR, t, type Locale } from "@/lib/i18n";
 import { Icon, type IconName } from "@/components/Icon";
 import { LineChart, BarsVertical, MiniCalendar } from "@/components/Charts";
 
+export const dynamic = "force-dynamic";
 const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "DISQUALIFIED", "CONVERTED"] as const;
 
 export default async function DashboardPage() {

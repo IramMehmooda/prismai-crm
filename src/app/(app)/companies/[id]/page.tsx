@@ -6,6 +6,7 @@ import { formatSAR, t, type Locale } from "@/lib/i18n";
 import { Icon } from "@/components/Icon";
 import DeleteEntityButton from "@/components/DeleteEntityButton";
 
+export const dynamic = "force-dynamic";
 const grads = ["bg-grad-brand", "bg-grad-aurora", "bg-grad-mint", "bg-grad-sunset"];
 
 function statusTone(s: string) {

@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { t, type Locale } from "@/lib/i18n";
 import CompanyForm from "../../new/CompanyForm";
 
+export const dynamic = "force-dynamic";
 export default async function EditCompanyPage({ params }: { params: { id: string } }) {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";

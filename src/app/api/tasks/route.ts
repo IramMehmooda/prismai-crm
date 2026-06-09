@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { notify } from "@/lib/notify";
 
+export const dynamic = "force-dynamic";
 const createSchema = z.object({
   title: z.string().min(2),
   description: z.string().nullable().optional(),
