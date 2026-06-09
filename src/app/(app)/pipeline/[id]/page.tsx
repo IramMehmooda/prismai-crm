@@ -394,6 +394,8 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
                     dueAt: task.dueAt,
                     assignee: task.assignee,
                     opportunity: task.opportunity,
+                    creator: null,
+                    lead: null,
                   }))}
                 />
               )}

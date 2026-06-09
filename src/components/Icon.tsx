@@ -7,9 +7,9 @@ export type IconName =
   | "search" | "bell" | "logout" | "globe" | "plus" | "sparkles"
   | "trend-up" | "trend-down" | "users" | "building" | "briefcase"
   | "phone" | "mail" | "whatsapp" | "calendar" | "menu" | "check"
-  | "chevron-right" | "filter" | "lightning" | "kanban"
+  | "chevron-right" | "chevron-left" | "filter" | "lightning" | "zap" | "kanban"
   | "tasks" | "quote" | "campaign" | "product" | "settings"
-  | "x" | "edit" | "trash" | "send" | "clock";
+  | "target" | "x" | "edit" | "trash" | "send" | "clock";
 
 const paths: Record<IconName, React.ReactNode> = {
   dashboard: (<><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></>),
@@ -35,6 +35,7 @@ const paths: Record<IconName, React.ReactNode> = {
   menu: (<><path d="M4 6h16M4 12h16M4 18h16"/></>),
   check: (<><path d="M5 12l5 5L20 7"/></>),
   "chevron-right": (<><path d="M9 6l6 6-6 6"/></>),
+  "chevron-left": (<><path d="M15 6l-6 6 6 6"/></>),
   filter: (<><path d="M3 5h18l-7 9v6l-4-2v-4z"/></>),
   lightning: (<><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></>),
   kanban: (<><rect x="3" y="3" width="6" height="14" rx="2"/><rect x="11" y="3" width="6" height="9" rx="2"/><rect x="19" y="3" width="2" height="6" rx="1"/></>),
@@ -48,6 +49,8 @@ const paths: Record<IconName, React.ReactNode> = {
   trash: (<><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></>),
   send: (<><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></>),
   clock: (<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>),
+  target: (<><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></>),
+  zap: (<><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></>),
 };
 
 export function Icon({ name, size = 18, ...rest }: Props) {

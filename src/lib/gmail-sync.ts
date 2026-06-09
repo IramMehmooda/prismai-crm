@@ -247,7 +247,7 @@ export async function syncGmailForUser({
             userId,
             type: "EMAIL_RECEIVED",
             title: emailNotificationTarget.title,
-            body: `${formatSender(from, header(msg, "From"))} · ${subject}`.slice(0, 200),
+            body: `${formatSender(from, header(msg, "From") ?? null)} · ${subject}`.slice(0, 200),
             href: buildGmailThreadUrl(msg.threadId),
             entity: emailNotificationTarget.entity,
             entityId: emailNotificationTarget.entityId,

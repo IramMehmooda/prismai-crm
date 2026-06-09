@@ -10,7 +10,7 @@ function safeName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-function isUploadFile(value: FormDataEntryValue | null): value is Blob & { name?: string } {
+function isUploadFile(value: FormDataEntryValue | null): value is File {
   return !!value && typeof value === "object" && "arrayBuffer" in value && "size" in value;
 }
 

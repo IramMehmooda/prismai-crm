@@ -181,7 +181,7 @@ export default function NotificationsBell() {
                   <Icon name="bell" size={20} className="text-slate-400" />
                 </div>
                 <div className="text-sm font-medium text-slate-700">All caught up</div>
-                <div className="text-[12px] text-slate-500 mt-1">You'll see new emails, mentions, approvals, leads, and tasks here.</div>
+                <div className="text-[12px] text-slate-500 mt-1">You&apos;ll see new emails, mentions, approvals, leads, and tasks here.</div>
               </div>
             )}
             {items.map((n) => {

@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   const stageBuckets = new Map<string, { name: string; color: string; count: number; sum: number; order: number }>();
   for (const o of oppByStage) {
     const k = o.stage.id;
-    const cur = stageBuckets.get(k) ?? { name: o.stage.name, color: o.stage.color, count: 0, sum: 0, order: o.stage.order };
+    const cur = stageBuckets.get(k) ?? { name: o.stage.name, color: o.stage.color ?? "", count: 0, sum: 0, order: o.stage.order };
     cur.count += 1; cur.sum += o.amount;
     stageBuckets.set(k, cur);
   }

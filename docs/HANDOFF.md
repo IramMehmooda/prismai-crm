@@ -947,6 +947,12 @@ Already present in `src/app/(app)/layout.tsx` from previous session — no chang
 
 ## 8. Continuation prompt for a new chat
 
+I'm continuing work on **prismAI**, a HubSpot-like CRM for industrial manufacturers (generic, formerly SMI), located at `/Users/irammehmooda/CRM/Project/prismai`.
+
+**First**, read `docs/HANDOFF.md` end-to-end and `/Users/irammehmooda/CRM/plan.md`. They document Phases 1-4 (auth, dashboard, contacts/companies/leads/activities, pipeline+kanban, tasks, products+quotes+VAT+approvals, scoring+campaigns, Gmail OAuth) plus the most recent batches (rebrand from SMI to generic Industrial, global search palette, notifications system, `/profile` page, topbar/sidebar overhaul, all April/May 2026 changes, and the Statistics analytics dashboard).
+
+---
+
 Paste the block below into a new Copilot chat to resume work on this project with full context:
 
 ```

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { syncGmailForUser } from "@/lib/gmail-sync";
 
 export const dynamic = "force-dynamic";
