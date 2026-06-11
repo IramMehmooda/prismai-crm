@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-import { buildAuthUrl, googleConfigured } from "@/lib/google";
+import { buildAuthUrl, googleConfigured, googleRedirectUri } from "@/lib/google";
 import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
   const state = randomBytes(16).toString("hex");
-  const res = NextResponse.redirect(buildAuthUrl(state, mode));
+  const res = NextResponse.redirect(buildAuthUrl(state, mode, googleRedirectUri(url.origin)));
   res.cookies.set("prismai_oauth_state", state, {
     httpOnly: true,
     sameSite: "lax",

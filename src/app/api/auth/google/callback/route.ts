@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
-import { exchangeCode, fetchGoogleUser } from "@/lib/google";
+import { exchangeCode, fetchGoogleUser, googleRedirectUri } from "@/lib/google";
 import { gmailPushConfigured, gmailWatch } from "@/lib/gmail";
 import { createSession, getSession } from "@/lib/auth";
 
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
   let tokens;
   let g;
   try {
-    tokens = await exchangeCode(code);
+    tokens = await exchangeCode(code, googleRedirectUri(url.origin));
     g = await fetchGoogleUser(tokens.access_token);
   } catch (e: any) {
     return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent("oauth_failed")}`, req.url));

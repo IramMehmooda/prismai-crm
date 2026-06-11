@@ -14,13 +14,22 @@ export const GOOGLE_SCOPES = [
 ];
 
 export function googleConfigured() {
-  return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REDIRECT_URI);
+  return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 }
 
-export function buildAuthUrl(state: string, mode: "login" | "connect" = "login") {
+/**
+ * Resolves the OAuth redirect URI. Prefers an explicit GOOGLE_REDIRECT_URI
+ * (useful for a stable custom domain); otherwise derives it from the current
+ * request origin so it works on any Vercel deployment URL without hardcoding.
+ */
+export function googleRedirectUri(origin: string) {
+  return process.env.GOOGLE_REDIRECT_URI || `${origin}/api/auth/google/callback`;
+}
+
+export function buildAuthUrl(state: string, mode: "login" | "connect" = "login", redirectUri?: string) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID!,
-    redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+    redirect_uri: redirectUri ?? process.env.GOOGLE_REDIRECT_URI!,
     response_type: "code",
     scope: GOOGLE_SCOPES.join(" "),
     access_type: "offline",
@@ -40,12 +49,12 @@ export type GoogleTokens = {
   token_type: string;
 };
 
-export async function exchangeCode(code: string): Promise<GoogleTokens> {
+export async function exchangeCode(code: string, redirectUri?: string): Promise<GoogleTokens> {
   const body = new URLSearchParams({
     code,
     client_id: process.env.GOOGLE_CLIENT_ID!,
     client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-    redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+    redirect_uri: redirectUri ?? process.env.GOOGLE_REDIRECT_URI!,
     grant_type: "authorization_code",
   });
   const res = await fetch(GOOGLE_TOKEN_URL, {
