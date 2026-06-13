@@ -8,15 +8,19 @@ import OwnerToggle from "@/components/OwnerToggle";
 import LeadsTable from "./LeadsTable";
 
 export const dynamic = "force-dynamic";
-export default async function LeadsPage({ searchParams }: { searchParams?: { owner?: string } }) {
+export default async function LeadsPage({ searchParams }: { searchParams?: { owner?: string; source?: string; status?: string } }) {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";
   const mineOnly = searchParams?.owner === "me";
+  const filterSource = searchParams?.source;
+  const filterStatus = searchParams?.status;
   const scope = await getVisibleScope(session);
   const [leads, stages] = await Promise.all([
     prisma.lead.findMany({
       where: {
         ...(ownerWhere(scope, "ownerId", mineOnly, session.sub) ?? {}),
+        ...(filterSource ? { source: filterSource } : {}),
+        ...(filterStatus ? { status: filterStatus } : {}),
       },
       orderBy: { createdAt: "desc" },
       include: {
@@ -50,6 +54,8 @@ export default async function LeadsPage({ searchParams }: { searchParams?: { own
       <LeadsTable
         locale={locale}
         currentUserId={session.sub}
+        filterSource={filterSource}
+        filterStatus={filterStatus}
         leads={leads.map((lead) => ({
           id: lead.id,
           title: lead.title,

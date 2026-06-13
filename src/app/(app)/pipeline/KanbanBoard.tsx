@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { formatSAR, type Locale } from "@/lib/i18n";
@@ -13,12 +13,20 @@ type Opp = {
 type Total = { id: string; sum: number; count: number };
 
 export default function KanbanBoard({
-  stages, opportunities, totals, locale,
-}: { stages: Stage[]; opportunities: Opp[]; totals: Total[]; locale: Locale }) {
+  stages, opportunities, totals, locale, focusStageId,
+}: { stages: Stage[]; opportunities: Opp[]; totals: Total[]; locale: Locale; focusStageId?: string }) {
   const router = useRouter();
   const [items, setItems] = useState(opportunities);
   const [dragId, setDragId] = useState<string | null>(null);
   const [clickedAfterDragId, setClickedAfterDragId] = useState<string | null>(null);
+  const focusRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll the highlighted column into view on mount
+  useEffect(() => {
+    if (focusRef.current) {
+      focusRef.current.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, []);
 
   async function move(oppId: string, stageId: string) {
     const before = items;
@@ -41,10 +49,14 @@ export default function KanbanBoard({
       {stages.map((s) => {
         const tot = totals.find((t) => t.id === s.id) ?? { sum: 0, count: 0 };
         const inStage = items.filter((o) => o.stageId === s.id);
+        const isFocused = focusStageId === s.id;
         return (
           <div
             key={s.id}
-            className="card p-3 min-h-[420px] flex flex-col"
+            ref={isFocused ? focusRef : null}
+            className={`card p-3 min-h-[420px] flex flex-col transition-all ${
+              isFocused ? "ring-2 ring-leaf-500 ring-offset-2 shadow-glow" : ""
+            }`}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => { if (dragId) { move(dragId, s.id); setDragId(null); } }}
           >
@@ -53,6 +65,11 @@ export default function KanbanBoard({
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color ?? "#94a3b8" }}/>
                 <span className="text-[12px] font-semibold text-ink-700 uppercase tracking-wide">{s.name}</span>
                 <span className="pill bg-ink-100 text-ink-600">{tot.count}</span>
+                {isFocused && (
+                  <span className="ml-1 rounded-full bg-leaf-100 text-leaf-700 text-[10px] font-semibold px-2 py-0.5">
+                    {locale === "ar" ? "مصفّى" : "Filtered"}
+                  </span>
+                )}
               </div>
               <div className="text-[11px] text-ink-500 tabular-nums">{formatSAR(tot.sum, locale)}</div>
             </div>

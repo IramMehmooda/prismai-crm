@@ -152,14 +152,24 @@ export default function LeadsTable({
   stages,
   locale,
   currentUserId,
+  filterSource,
+  filterStatus,
 }: {
   leads: LeadRow[];
   stages: StageOption[];
   locale: Locale;
   currentUserId: string;
+  filterSource?: string;
+  filterStatus?: string;
 }) {
+  const isFiltered = !!(filterSource || filterStatus);
+  // When arriving from a chart filter, pre-select the most relevant tab
+  const defaultTab: TabKey =
+    filterStatus === "CONVERTED" ? "converted" :
+    filterStatus === "NEW" ? "new" :
+    "active";
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<TabKey>("active");
+  const [tab, setTab] = useState<TabKey>(defaultTab);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
@@ -206,6 +216,27 @@ export default function LeadsTable({
 
   return (
     <div className="space-y-4">
+      {/* Filter banner — shown when navigating from an analytics chart */}
+      {isFiltered && (
+        <div className="flex items-center gap-3 rounded-lg border border-leaf-200 bg-leaf-50 px-4 py-2.5 text-sm">
+          <span className="text-leaf-700 font-medium">
+            {locale === "ar" ? "تصفية:" : "Filtered by:"}
+          </span>
+          {filterSource && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-leaf-200 px-2.5 py-0.5 text-[12px] font-semibold text-leaf-800">
+              Source = {filterSource.replace(/_/g, " ")}
+            </span>
+          )}
+          {filterStatus && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-leaf-200 px-2.5 py-0.5 text-[12px] font-semibold text-leaf-800">
+              Status = {filterStatus}
+            </span>
+          )}
+          <a href="/leads" className="ml-auto text-[12px] text-leaf-600 hover:text-leaf-800 hover:underline">
+            {locale === "ar" ? "× مسح الفلاتر" : "× Clear filter"}
+          </a>
+        </div>
+      )}
       <div className="card p-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
           {tabs.map((item) => (

@@ -114,7 +114,10 @@ async function getStats() {
     cur.sum += o.amount; cur.count += 1;
     stageBuckets.set(o.stage.id, cur);
   }
-  const dealsByStage = stagesAll.map((s) => stageBuckets.get(s.id) ?? { name: s.name, sum: 0, count: 0, order: s.order, color: s.color });
+  const dealsByStage = stagesAll.map((s) => {
+    const bucket = stageBuckets.get(s.id) ?? { name: s.name, sum: 0, count: 0, order: s.order, color: s.color };
+    return { ...bucket, stageId: s.id };
+  });
   const totalPipeline = activeOpps.reduce((s, o) => s + o.amount, 0);
 
   /* won/lost by month */
@@ -348,7 +351,7 @@ function LeadsBySourceChart({ data }: { data: { label: string; value: number }[]
         const color = SOURCE_COLORS[d.label] ?? "#8a98a5";
         const labelStr = d.label.replace(/_/g, " ").split(" ").map((w) => w[0] + w.slice(1).toLowerCase()).join(" ");
         return (
-          <a key={d.label} href="/leads" aria-label={`View ${labelStr} leads`}>
+          <a key={d.label} href={`/leads?source=${encodeURIComponent(d.label)}`} aria-label={`View ${labelStr} leads`}>
             <rect x={x} y={y} width={barW} height={bh} rx="4" fill={color} opacity={0.9}
               className="cursor-pointer hover:opacity-100" style={{ transition: "opacity 0.15s" }} />
             <text x={x + barW / 2} y={y - 5} fontSize="11" fontWeight="700" fill="#2c3845" textAnchor="middle">{d.value}</text>
@@ -387,7 +390,7 @@ function LeadStatusDonut({ data, total }: { data: { label: string; value: number
         <svg width={size} height={size} className="-rotate-90">
           <circle cx={cx} cy={cy} r={r} stroke="#eef2f6" strokeWidth={strokeW} fill="none" />
           {segments.map((seg) => (
-            <a key={seg.label} href="/leads" aria-label={`View ${seg.label} leads`}>
+            <a key={seg.label} href={`/leads?status=${encodeURIComponent(seg.label)}`} aria-label={`View ${seg.label} leads`}>
               <circle
                 cx={cx} cy={cy} r={r}
                 stroke={STATUS_COLORS[seg.label] ?? "#8a98a5"}
@@ -409,7 +412,7 @@ function LeadStatusDonut({ data, total }: { data: { label: string; value: number
       </div>
       <div className="space-y-1.5 flex-1">
         {segments.map((seg) => (
-          <Link key={seg.label} href="/leads" className="flex items-center gap-2 text-xs hover:bg-ink-50 rounded px-1 py-0.5 transition-colors">
+          <Link key={seg.label} href={`/leads?status=${encodeURIComponent(seg.label)}`} className="flex items-center gap-2 text-xs hover:bg-ink-50 rounded px-1 py-0.5 transition-colors">
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: STATUS_COLORS[seg.label] ?? "#8a98a5" }} />
             <span className="text-ink-700 truncate">{seg.label.charAt(0) + seg.label.slice(1).toLowerCase()}</span>
             <span className="ml-auto text-ink-500 tabular-nums font-medium">{seg.value}</span>
@@ -432,31 +435,33 @@ function WonLostChart({ months }: { months: { label: string; won: number; lost: 
   const totalW = padL + months.length * gw;
 
   return (
-    <a href="/pipeline" aria-label="View pipeline">
-      <svg viewBox={`0 0 ${totalW} ${chartH + padT + padB}`} className="w-full cursor-pointer" style={{ maxHeight: 220 }}>
-        {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
-          const y = padT + chartH * (1 - pct);
-          return (
-            <g key={pct}>
-              <line x1={padL} x2={totalW} y1={y} y2={y} stroke="#f0f4f8" strokeWidth="1" />
-              <text x={padL - 5} y={y + 3} fontSize="8" fill="#9aabb5" textAnchor="end">{formatAxisLabel(nMax * pct)}</text>
-            </g>
-          );
-        })}
-        {months.map((m, i) => {
-          const gx = padL + i * gw + 4;
-          const wh = (m.won  / nMax) * chartH;
-          const lh = (m.lost / nMax) * chartH;
-          return (
-            <g key={m.label}>
-              <rect x={gx}          y={padT + chartH - wh} width={bw} height={wh} rx="2" fill={WON_COLOR}  opacity={0.85} className="hover:opacity-100" />
-              <rect x={gx + bw + bGap} y={padT + chartH - lh} width={bw} height={lh} rx="2" fill={LOST_COLOR} opacity={0.8}  className="hover:opacity-100" />
-              <text x={gx + bw} y={padT + chartH + 14} fontSize="8" fill="#9aabb5" textAnchor="middle">{m.label}</text>
-            </g>
-          );
-        })}
-      </svg>
-    </a>
+    <svg viewBox={`0 0 ${totalW} ${chartH + padT + padB}`} className="w-full" style={{ maxHeight: 220 }}>
+      {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
+        const y = padT + chartH * (1 - pct);
+        return (
+          <g key={pct}>
+            <line x1={padL} x2={totalW} y1={y} y2={y} stroke="#f0f4f8" strokeWidth="1" />
+            <text x={padL - 5} y={y + 3} fontSize="8" fill="#9aabb5" textAnchor="end">{formatAxisLabel(nMax * pct)}</text>
+          </g>
+        );
+      })}
+      {months.map((m, i) => {
+        const gx = padL + i * gw + 4;
+        const wh = Math.max(0, (m.won  / nMax) * chartH);
+        const lh = Math.max(0, (m.lost / nMax) * chartH);
+        return (
+          <g key={m.label}>
+            <a href="/pipeline?stage=stage-won" aria-label={`Won deals in ${m.label}`}>
+              <rect x={gx}             y={padT + chartH - wh} width={bw} height={wh} rx="2" fill={WON_COLOR}  opacity={0.85} className="cursor-pointer hover:opacity-100" style={{ transition: "opacity 0.15s" }} />
+            </a>
+            <a href="/pipeline?stage=stage-lost" aria-label={`Lost deals in ${m.label}`}>
+              <rect x={gx + bw + bGap} y={padT + chartH - lh} width={bw} height={lh} rx="2" fill={LOST_COLOR} opacity={0.8}  className="cursor-pointer hover:opacity-100" style={{ transition: "opacity 0.15s" }} />
+            </a>
+            <text x={gx + bw} y={padT + chartH + 14} fontSize="8" fill="#9aabb5" textAnchor="middle">{m.label}</text>
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -464,7 +469,7 @@ function WonLostChart({ months }: { months: { label: string; won: number; lost: 
    CHART 4: Deals by Stage (horizontal funnel bars)
    ════════════════════════════════════════════════ */
 function DealsByStageChart({ data, totalPipeline }: {
-  data: { name: string; sum: number; count: number; order: number; color: string | null }[];
+  data: { stageId: string; name: string; sum: number; count: number; order: number; color: string | null }[];
   totalPipeline: number;
 }) {
   const nonEmpty = data.filter((d) => d.sum > 0 || d.count > 0);
@@ -478,7 +483,7 @@ function DealsByStageChart({ data, totalPipeline }: {
         const sharePct = totalPipeline > 0 ? Math.round((d.sum / totalPipeline) * 100) : 0;
         const color    = d.color ?? STAGE_COLORS[i % STAGE_COLORS.length];
         return (
-          <Link href="/pipeline" key={d.name} className="block group">
+          <Link href={`/pipeline?stage=${d.stageId}`} key={d.name} className="block group">
             <div className="flex items-center justify-between text-xs mb-0.5">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full" style={{ background: color }} />
@@ -515,7 +520,7 @@ function IndustryTreemap({ data }: { data: { label: string; value: number }[] })
         const bw = r.x2 - r.x1, bh = r.y2 - r.y1;
         const color = INDUSTRY_COLORS[i % INDUSTRY_COLORS.length];
         return (
-          <a key={d.label} href="/companies" aria-label={`${d.label}: ${formatSARShort(d.value)}`}>
+          <a key={d.label} href={`/companies?industry=${encodeURIComponent(d.label)}`} aria-label={`${d.label}: ${formatSARShort(d.value)}`}>
             <g className="cursor-pointer">
               <rect x={r.x1} y={r.y1} width={bw} height={bh} fill={color} rx="3" stroke="#fff" strokeWidth="2"
                 className="hover:opacity-80" style={{ transition: "opacity 0.15s" }} />
@@ -562,21 +567,19 @@ function TaskPieChart({ data, total }: { data: { label: string; value: number }[
 
   return (
     <div className="flex items-center gap-4">
-      <a href="/tasks" aria-label="View tasks by priority" className="shrink-0">
-        <svg width={size} height={size} className="cursor-pointer">
-          {slices.map((s) => (
-            <a key={s.label} href="/tasks" aria-label={`${s.label} tasks: ${s.value}`}>
+      <svg width={size} height={size} className="cursor-pointer shrink-0">
+        {slices.map((s) => (
+          <a key={s.label} href={`/tasks?priority=${s.label}`} aria-label={`${s.label} tasks: ${s.value}`}>
               <path d={s.path} fill={PRIORITY_COLORS[s.label] ?? "#8a98a5"}
                 className="cursor-pointer hover:opacity-80" style={{ transition: "opacity 0.15s" }} />
-            </a>
-          ))}
-          <circle cx={cx} cy={cy} r={25} fill="white" />
-          <text x={cx} y={cy + 4} fontSize="13" fontWeight="700" fill="#2c3845" textAnchor="middle">{total}</text>
-        </svg>
-      </a>
+          </a>
+        ))}
+        <circle cx={cx} cy={cy} r={25} fill="white" />
+        <text x={cx} y={cy + 4} fontSize="13" fontWeight="700" fill="#2c3845" textAnchor="middle">{total}</text>
+      </svg>
       <div className="space-y-2 flex-1">
         {slices.map((s) => (
-          <Link key={s.label} href="/tasks" className="flex items-center gap-2 text-xs hover:bg-ink-50 rounded px-1 py-0.5 transition-colors">
+          <Link key={s.label} href={`/tasks?priority=${s.label}`} className="flex items-center gap-2 text-xs hover:bg-ink-50 rounded px-1 py-0.5 transition-colors">
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: PRIORITY_COLORS[s.label] ?? "#8a98a5" }} />
             <span className="text-ink-700 capitalize">{s.label.toLowerCase()}</span>
             <span className="ml-auto tabular-nums font-semibold text-ink-800">{s.value}</span>
@@ -599,13 +602,13 @@ function SaudiMap({ locations }: { locations: { region: string; value: number; x
   const outline = "M 49 88 L 56 60 L 96 46 L 185 44 L 250 50 L 290 66 L 315 90 L 338 98 L 368 118 L 388 148 L 378 192 L 360 228 L 355 262 L 348 288 L 296 338 L 238 360 L 178 368 L 126 302 L 94 268 L 68 208 L 58 158 Z";
 
   return (
-    <a href="/companies" aria-label="View companies by region" className="block">
-      <svg viewBox="0 0 440 385" className="w-full cursor-pointer" style={{ maxHeight: 240 }}>
-        <path d={outline} fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1.5" />
-        {locations.map((loc) => {
-          const bubbleR = 6 + (loc.value / maxVal) * 22;
-          return (
-            <g key={loc.region}>
+    <svg viewBox="0 0 440 385" className="w-full" style={{ maxHeight: 240 }}>
+      <path d={outline} fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1.5" />
+      {locations.map((loc) => {
+        const bubbleR = 6 + (loc.value / maxVal) * 22;
+        return (
+          <a key={loc.region} href={`/companies?region=${encodeURIComponent(loc.region)}`} aria-label={`View companies in ${loc.label}`}>
+            <g className="cursor-pointer">
               <circle cx={loc.x} cy={loc.y} r={bubbleR} fill="#27ae60" opacity={0.22} />
               <circle cx={loc.x} cy={loc.y} r={Math.max(5, bubbleR * 0.55)} fill="#27ae60" opacity={0.75}
                 className="hover:opacity-100" style={{ transition: "opacity 0.15s" }} />
@@ -616,17 +619,17 @@ function SaudiMap({ locations }: { locations: { region: string; value: number; x
                 {formatSARShort(loc.value)}
               </text>
             </g>
-          );
-        })}
-        {locations.length === 0 && (
-          <text x="220" y="185" fontSize="12" fill="#9aabb5" textAnchor="middle">No deal locations yet</text>
-        )}
-        <g>
-          <circle cx="18" cy="372" r="5" fill="#27ae60" opacity="0.7" />
-          <text x="28" y="376" fontSize="9" fill="#5b6b78">Deal volume</text>
-        </g>
-      </svg>
-    </a>
+          </a>
+        );
+      })}
+      {locations.length === 0 && (
+        <text x="220" y="185" fontSize="12" fill="#9aabb5" textAnchor="middle">No deal locations yet</text>
+      )}
+      <g>
+        <circle cx="18" cy="372" r="5" fill="#27ae60" opacity="0.7" />
+        <text x="28" y="376" fontSize="9" fill="#5b6b78">Deal volume</text>
+      </g>
+    </svg>
   );
 }
 

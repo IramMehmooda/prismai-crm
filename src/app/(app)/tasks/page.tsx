@@ -11,11 +11,12 @@ export const dynamic = "force-dynamic";
 
 type TaskView = "my" | "assigned" | "completed";
 
-export default async function TasksPage({ searchParams }: { searchParams?: { owner?: string; view?: TaskView } }) {
+export default async function TasksPage({ searchParams }: { searchParams?: { owner?: string; view?: TaskView; priority?: string } }) {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";
   const mineOnly = searchParams?.owner === "me";
   const view = searchParams?.view ?? "my";
+  const filterPriority = searchParams?.priority;
   const scope = await getVisibleScope(session);
   const assigneeFilter = ownerWhere(scope, "assigneeId", mineOnly, session.sub);
   const leadOwnerFilter = ownerWhere(scope, "ownerId", mineOnly, session.sub);
@@ -25,7 +26,7 @@ export default async function TasksPage({ searchParams }: { searchParams?: { own
     : undefined;
   const [tasks, users, leads, opps] = await Promise.all([
     prisma.task.findMany({
-      where: taskWhere,
+      where: { ...taskWhere, ...(filterPriority ? { priority: filterPriority } : {}) },
       include: {
         assignee: true,
         creator: true,
@@ -90,6 +91,19 @@ export default async function TasksPage({ searchParams }: { searchParams?: { own
         </div>
         <OwnerToggle mineOnly={mineOnly} basePath="/tasks" locale={locale} />
       </div>
+
+      {/* Filter banner — shown when navigating from analytics chart */}
+      {filterPriority && (
+        <div className="flex items-center gap-3 rounded-lg border border-leaf-200 bg-leaf-50 px-4 py-2.5 text-sm">
+          <span className="text-leaf-700 font-medium">{locale === "ar" ? "تصفية:" : "Filtered by:"}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-leaf-200 px-2.5 py-0.5 text-[12px] font-semibold text-leaf-800">
+            Priority = {filterPriority}
+          </span>
+          <a href="/tasks" className="ml-auto text-[12px] text-leaf-600 hover:text-leaf-800 hover:underline">
+            {locale === "ar" ? "× مسح الفلاتر" : "× Clear filter"}
+          </a>
+        </div>
+      )}
 
       <div className="card p-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">

@@ -8,10 +8,11 @@ import KanbanBoard from "./KanbanBoard";
 
 export const dynamic = "force-dynamic";
 
-export default async function PipelinePage({ searchParams }: { searchParams?: { owner?: string } }) {
+export default async function PipelinePage({ searchParams }: { searchParams?: { owner?: string; stage?: string } }) {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";
   const mineOnly = searchParams?.owner === "me";
+  const focusStageId = searchParams?.stage;
   const scope = await getVisibleScope(session);
   const [stages, opps] = await Promise.all([
     prisma.pipelineStage.findMany({ orderBy: { order: "asc" } }),
@@ -49,6 +50,7 @@ export default async function PipelinePage({ searchParams }: { searchParams?: { 
 
       <KanbanBoard
         locale={locale}
+        focusStageId={focusStageId}
         stages={stages.map((s) => ({ id: s.id, name: locale === "ar" && s.nameAr ? s.nameAr : s.name, color: s.color, isWon: s.isWon, isLost: s.isLost }))}
         opportunities={opps.map((o) => ({
           id: o.id, title: o.title, amount: o.amount, stageId: o.stageId,

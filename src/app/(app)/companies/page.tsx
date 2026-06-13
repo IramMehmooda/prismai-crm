@@ -7,10 +7,16 @@ import { Icon } from "@/components/Icon";
 export const dynamic = "force-dynamic";
 const grads = ["bg-grad-aurora", "bg-grad-brand", "bg-grad-sunset", "bg-grad-mint"];
 
-export default async function CompaniesPage() {
+export default async function CompaniesPage({ searchParams }: { searchParams?: { industry?: string; region?: string } }) {
   const session = (await getSession())!;
   const locale = (session.locale as Locale) ?? "en";
+  const filterIndustry = searchParams?.industry;
+  const filterRegion   = searchParams?.region;
   const companies = await prisma.company.findMany({
+    where: {
+      ...(filterIndustry ? { industry: filterIndustry } : {}),
+      ...(filterRegion   ? { region:   filterRegion   } : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: { owner: true, _count: { select: { contacts: true, leads: true } } },
   });
@@ -24,6 +30,26 @@ export default async function CompaniesPage() {
         </div>
         <Link href="/companies/new" className="btn-primary"><Icon name="plus" size={16}/> {t(locale, "newCompany")}</Link>
       </div>
+
+      {/* Filter banner */}
+      {(filterIndustry || filterRegion) && (
+        <div className="flex items-center gap-3 rounded-lg border border-leaf-200 bg-leaf-50 px-4 py-2.5 text-sm">
+          <span className="text-leaf-700 font-medium">{locale === "ar" ? "تصفية:" : "Filtered by:"}</span>
+          {filterIndustry && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-leaf-200 px-2.5 py-0.5 text-[12px] font-semibold text-leaf-800">
+              Industry = {filterIndustry}
+            </span>
+          )}
+          {filterRegion && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-leaf-200 px-2.5 py-0.5 text-[12px] font-semibold text-leaf-800">
+              Region = {filterRegion}
+            </span>
+          )}
+          <a href="/companies" className="ml-auto text-[12px] text-leaf-600 hover:text-leaf-800 hover:underline">
+            {locale === "ar" ? "× مسح الفلاتر" : "× Clear filter"}
+          </a>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
         {companies.map((c, i) => (
